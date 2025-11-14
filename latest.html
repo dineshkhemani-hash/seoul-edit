@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Latest Dramas - Seoul Drama Edit</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter (body) & Cormorant Garamond (headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom Styles -->
+    <style>
+      /* Base Styling */
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #fffbf5; /* Soft, warm off-white */
+        color: #4b4b4b; /* Dark grey text */
+        overflow-x: hidden;
+        cursor: none; /* Hide default cursor */
+      }
+
+      /* Custom Cursor */
+      .cursor-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #2d4a48; /* Muted teal */
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9999;
+        transition: width 0.2s ease, height 0.2s ease;
+      }
+      .cursor-outline {
+        width: 30px;
+        height: 30px;
+        border: 2px solid #2d4a48;
+        border-radius: 50%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 9998;
+        transition: transform 0.1s linear;
+      }
+
+      /* Enlarge dot cursor on hoverable elements */
+      body:has(a:hover) .cursor-dot,
+      body:has(button:hover) .cursor-dot,
+      body:has(.drama-card:hover) .cursor-dot {
+        width: 16px;
+        height: 16px;
+        background-color: #b05b3b; /* Terracotta accent */
+      }
+      body:has(a:hover) .cursor-outline,
+      body:has(button:hover) .cursor-outline,
+      body:has(.drama-card:hover) .cursor-outline {
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+
+      /* Custom Typography */
+      .font-serif-display {
+        font-family: "Cormorant Garamond", serif;
+        font-weight: 600;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #fffbf5;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d9d9d9;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #b05b3b;
+      }
+
+      /* Smooth Scroll */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Section Title Styling */
+      .section-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 5rem; /* 80px */
+        font-weight: 500;
+        line-height: 1;
+        color: #2d4a48; /* Muted teal */
+      }
+      @media (max-width: 768px) {
+        .section-title {
+          font-size: 3rem; /* 48px */
+        }
+      }
+
+      /* Animations */
+      .scroll-animate-fade {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        transition-delay: var(--delay, 0s);
+      }
+      .scroll-animate-reveal {
+        clip-path: inset(0 100% 0 0);
+        transition: clip-path 1s cubic-bezier(0.22, 1, 0.36, 1);
+        transition-delay: var(--delay, 0s);
+      }
+      .is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        clip-path: inset(0 0 0 0);
+      }
+
+      /* Pagination button styling */
+      .pagination-btn {
+        padding: 8px 16px;
+        border: 1px solid #d9d9d9;
+        color: #4b4b4b;
+        transition: all 0.3s ease;
+      }
+      .pagination-btn:hover:not(:disabled) {
+        background-color: #2d4a48;
+        color: #fffbf5;
+        border-color: #2d4a48;
+      }
+      .pagination-btn:disabled {
+        color: #d9d9d9;
+        cursor: not-allowed;
+      }
+
+      /* Search Bar */
+      #search-container {
+        position: relative;
+      }
+      #search-input {
+        border: 1px solid #d9d9d9;
+        padding: 12px 20px;
+        width: 100%;
+        font-size: 1rem;
+        color: #4b4b4b;
+        background-color: #fffbf5;
+      }
+      #search-input:focus {
+        outline: none;
+        border-color: #2d4a48;
+      }
+
+      /* Suggestions Box */
+      #suggestions-box {
+        position: absolute;
+        width: 100%;
+        background-color: #fffbf5;
+        border: 1px solid #d9d9d9;
+        border-top: none;
+        z-index: 30;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .suggestion-item {
+        padding: 12px 20px;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.25rem;
+        color: #2d4a48;
+        cursor: none;
+      }
+      .suggestion-item:hover {
+        background-color: #f8f3ed;
+        color: #b05b3b;
+      }
+    </style>
+  </head>
+  <body class="relative">
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- HEADER -->
+    <header
+      id="header"
+      class="fixed top-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-md"
+    >
+      <nav
+        class="container mx-auto px-6 md:px-10 py-5 flex justify-between items-center"
+      >
+        <a
+          href="kdrama_editorial_v3.html"
+          class="font-serif-display text-3xl text-gray-800 tracking-wide"
+        >
+          The Edit
+        </a>
+        <div
+          class="hidden md:flex items-center space-x-10 text-sm font-medium tracking-wider uppercase"
+        >
+          <a
+            href="ongoing.html"
+            class="text-gray-600 hover:text-black transition-colors"
+            >Ongoing</a
+          >
+          <a href="latest.html" class="text-black transition-colors">Latest</a>
+          <a
+            href="#upcoming"
+            class="text-gray-600 hover:text-black transition-colors"
+            >Upcoming</a
+          >
+        </div>
+        <button class="md:hidden text-gray-800">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16m-7 6h7"
+            />
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="pt-32">
+      <!-- Search Section -->
+      <section
+        id="search-section"
+        class="container mx-auto px-6 md:px-10 mb-12"
+      >
+        <div id="search-container" class="max-w-2xl mx-auto">
+          <div class="flex">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Search for a drama..."
+            />
+            <button
+              id="search-btn"
+              class="px-6 py-3 bg-[#2D4A48] text-white font-medium uppercase tracking-wider text-sm hover:bg-[#B05B3B] transition-colors"
+            >
+              Search
+            </button>
+          </div>
+          <div id="suggestions-box" class="hidden">
+            <!-- Suggestions will be injected by JS -->
+          </div>
+        </div>
+        <div class="max-w-2xl mx-auto text-right mt-2">
+          <button
+            id="clear-btn"
+            class="text-sm text-gray-500 hover:text-[#B05B3B] hidden"
+          >
+            &times; Clear Search
+          </button>
+        </div>
+      </section>
+
+      <!-- LATEST PAGE SECTION -->
+      <section
+        id="latest-page"
+        class="py-16 container mx-auto px-6 md:px-10 overflow-hidden"
+      >
+        <div class="text-right mb-12">
+          <h1 class="section-title mb-4 scroll-animate-fade">Latest.</h1>
+          <p
+            class="text-lg text-gray-600 max-w-lg ml-auto scroll-animate-fade"
+            style="--delay: 0.2s"
+          >
+            The freshest stories just released. See what's new and ready to
+            binge.
+          </p>
+        </div>
+
+        <!-- Paginated Asymmetric Feed -->
+        <div id="drama-feed" class="space-y-24">
+          <!-- 
+                  FIX: New Structure
+                  - On mobile: A single card with shadow (bg-white shadow-lg). Image is first, text is second.
+                  - On desktop: Becomes a grid (md:grid), bg becomes transparent (md:bg-transparent), shadow is removed (md:shadow-none).
+                    - Text card gets its own shadow (md:shadow-lg) and bg (md:bg-[#FFFBF5]).
+                    - Image and Text are re-ordered using md:order-first/last.
+                -->
+
+          <!-- Item 1 (Text Left, Image Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="My Troublesome Star"
+            data-genre="Korean Drama - 2025, 12 episodes"
+            data-rating="7.7"
+            data-summary="Actress Im Se Ra is on top of the world after becoming the youngest winner of a best actress award in 1999. That same night, she is hit by a truck and suddenly wakes up 25 years later in the body of Bong Cheong Ja, a..."
+            data-poster="https://i.mydramalist.com/nOYv5E_4s.jpg?v=1"
+          >
+            <!-- Text Box -->
+            <div class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg">
+              <p class="text-sm font-medium text-[#B05B3B]">Fantasy, Rom-Com</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                My Troublesome Star
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Actress Im Se Ra is on top of the world after becoming the
+                youngest winner of a best actress award in 1999. That same
+                night, she is hit by a truck and suddenly wakes up 25 years
+                later...
+              </p>
+            </div>
+            <!-- Image Box -->
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-ml-12 scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/nOYv5E_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/B0BEC5/333?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="My Troublesome Star"
+              />
+            </div>
+          </div>
+
+          <!-- Item 2 (Image Left, Text Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="Shin's Project"
+            data-genre="Korean Drama - 2025, 12 episodes"
+            data-rating="7.6"
+            data-summary="Mr. Shin may look like an ordinary chicken shop owner, but he's the kind of person who appears just in time-when tempers flare, fists are about to fly, and chaos looms-to cool things down with one sharp, satisfying line..."
+            data-poster="https://i.mydramalist.com/ABVQYL_4s.jpg?v=1"
+          >
+            <!-- Text Box -->
+            <div
+              class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg md:order-last"
+            >
+              <p class="text-sm font-medium text-[#B05B3B]">Comedy, Drama</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                Shin's Project
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Mr. Shin may look like an ordinary chicken shop owner, but he's
+                the kind of person who appears just in time-when tempers flare,
+                fists are about to fly, and chaos looms...
+              </p>
+            </div>
+            <!-- Image Box -->
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-mr-12 md:order-first scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/ABVQYL_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/D4A5A5/333?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="Shin's Project"
+              />
+            </div>
+          </div>
+
+          <!-- Item 3 (Text Left, Image Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="Confidence Queen"
+            data-genre="Korean Drama - 2025, 12 episodes"
+            data-rating="7.6"
+            data-summary="Three con artists with different backgrounds team up for a daring and adventurous scheme of revenge against the villains of this era. Yun I Rang, a con artist with an IQ of 165 and a genius-level mind in the top 1%..."
+            data-poster="https://i.mydramalist.com/81Ajvd_4s.jpg?v=1"
+          >
+            <div class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg">
+              <p class="text-sm font-medium text-[#B05B3B]">Heist, Comedy</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                Confidence Queen
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Three con artists with different backgrounds team up for a
+                daring and adventurous scheme of revenge against the villains of
+                this era. Yun I Rang, a con artist with an IQ of 165...
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-ml-12 scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/81Ajvd_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/A1887F/FFF?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="Confidence Queen"
+              />
+            </div>
+          </div>
+
+          <!-- Item 4 (Image Left, Text Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="My Secret Vampire"
+            data-genre="Korean Drama - 2025, 8 episodes"
+            data-rating="7.5"
+            data-summary="Ju Wan, Eun Ho, Seon Jae, and Gyu Min are four college housemates who are searching for a fifth individual to fill a vacant room in their dorm. But their main concern isn't about paying rent; they're ravenous vampires,..."
+            data-poster="https://i.mydramalist.com/oQ5R4z_4s.jpg?v=1"
+          >
+            <div
+              class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg md:order-last"
+            >
+              <p class="text-sm font-medium text-[#B05B3B]">Fantasy, Rom-Com</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                My Secret Vampire
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Ju Wan, Eun Ho, Seon Jae, and Gyu Min are four college
+                housemates who are searching for a fifth individual to fill a
+                vacant room in their dorm. But their main concern isn't about
+                paying rent...
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-mr-12 md:order-first scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/oQ5R4z_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/757575/FFF?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="My Secret Vampire"
+              />
+            </div>
+          </div>
+
+          <!-- Item 5 (Text Left, Image Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="Walking on Thin Ice"
+            data-genre="Korean Drama - 2025, 12 episodes"
+            data-rating="7.9"
+            data-summary="Kang Eun Su has never dreamed of an extravagant life, simply wishing to be happy with her husband, Park Do Jin, and daughter. However, after Do Jin is diagnosed with cancer, Eun Su struggles to make ends meet..."
+            data-poster="https://i.mydramalist.com/b3RrKL_4s.jpg?v=1"
+          >
+            <div class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg">
+              <p class="text-sm font-medium text-[#B05B3B]">Drama, Melodrama</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                Walking on Thin Ice
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Kang Eun Su has never dreamed of an extravagant life, simply
+                wishing to be happy with her husband, Park Do Jin, and daughter.
+                However, after Do Jin is diagnosed with cancer...
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-ml-12 scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/b3RrKL_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/B0BEC5/333?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="Walking on Thin Ice"
+              />
+            </div>
+          </div>
+
+          <!-- Item 6 (Image Left, Text Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="To the Moon"
+            data-genre="Korean Drama - 2025, 12 episodes"
+            data-rating="7.6"
+            data-summary="Da Hae, a weary marketing team manager at Marron Confectionery, wonders how long she can endure her seemingly hopeless life. Just then, Eun Sang from sales, who relentlessly pursues financial gain, entices her with the..."
+            data-poster="https://i.mydramalist.com/l0dZqx_4s.jpg?v=1"
+          >
+            <div
+              class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg md:order-last"
+            >
+              <p class="text-sm font-medium text-[#B05B3B]">Romance, Office</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                To the Moon
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Da Hae, a weary marketing team manager at Marron Confectionery,
+                wonders how long she can endure her seemingly hopeless life.
+                Just then, Eun Sang from sales, who relentlessly pursues
+                financial gain...
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-mr-12 md:order-first scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/l0dZqx_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/D4A5A5/333?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="To the Moon"
+              />
+            </div>
+          </div>
+
+          <!-- Item 7 (Text Left, Image Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="Bully and Nerd"
+            data-genre="Korean Drama - 2023, 46 episodes"
+            data-rating="7.4"
+            data-summary="A story about a bully and a nerd's intertwined past and present."
+            data-poster="https://i.mydramalist.com/RBPo1x_4s.jpg?v=1"
+          >
+            <div class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg">
+              <p class="text-sm font-medium text-[#B05B3B]">Drama, Youth</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                Bully and Nerd
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                A story about a bully and a nerd's intertwined past and present.
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-ml-12 scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/RBPo1x_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/A1887F/FFF?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="Bully and Nerd"
+              />
+            </div>
+          </div>
+
+          <!-- Item 8 (Image Left, Text Right) -->
+          <div
+            class="paginated-item drama-card md:grid md:grid-cols-12 md:gap-8 items-center scroll-animate-fade bg-[#FFFBF5] shadow-lg md:shadow-none md:bg-transparent"
+            data-title="The Woman Who Swallowed the Sun"
+            data-genre="Korean Drama - 2025, 120 episodes"
+            data-rating="7.4"
+            data-summary="Baek Seol Hui is a single mother with a bright and positive personality, raising her daughter alone. Baek Seol Hui runs a small restaurant. She has an ordinary, but happy daily life with her daughter..."
+            data-poster="https://i.mydramalist.com/ABLE0v_4s.jpg?v=1"
+          >
+            <div
+              class="md:col-span-5 z-10 p-8 md:bg-[#FFFBF5] md:shadow-lg md:order-last"
+            >
+              <p class="text-sm font-medium text-[#B05B3B]">Family, Drama</p>
+              <h3 class="font-serif-display text-4xl text-gray-800 mt-2">
+                The Woman Who Swallowed the Sun
+              </h3>
+              <p class="mt-4 text-gray-600 line-clamp-3">
+                Baek Seol Hui is a single mother with a bright and positive
+                personality, raising her daughter alone. Baek Seol Hui runs a
+                small restaurant...
+              </p>
+            </div>
+            <div
+              class="md:col-span-7 h-96 md:h-[500px] md:-mr-12 md:order-first scroll-animate-reveal"
+            >
+              <img
+                src="https://i.mydramalist.com/ABLE0v_4s.jpg?v=1"
+                onerror="this.onerror=null;this.src='https://placehold.co/800x600/757575/FFF?text=Poster+Not+Found';"
+                class="w-full h-full object-cover"
+                alt="The Woman Who Swallowed the Sun"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div
+          id="pagination-controls"
+          class="flex justify-center space-x-4 mt-24 scroll-animate-fade"
+        >
+          <button id="prev-page" class="pagination-btn">Previous</button>
+          <button id="next-page" class="pagination-btn">Next</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer
+      class="py-20 container mx-auto px-6 md:px-10 border-t border-gray-200 mt-12"
+    >
+      <div class="flex flex-col md:flex-row justify-between items-start">
+        <div>
+          <a
+            href="kdrama_editorial_v3.html"
+            class="font-serif-display text-3xl text-gray-800 tracking-wide"
+          >
+            The Edit
+          </a>
+          <p class="mt-2 text-gray-500">Curated K-Drama insights.</p>
+        </div>
+        <div class="mt-8 md:mt-0">
+          <h4 class="font-medium tracking-wider uppercase text-gray-700">
+            Explore
+          </h4>
+          <ul class="mt-4 space-y-2 text-gray-500">
+            <li><a href="ongoing.html" class="hover:text-black">Ongoing</a></li>
+            <li><a href="latest.html" class="hover:text-black">Latest</a></li>
+            <li><a href="#upcoming" class="hover:text-black">Upcoming</a></li>
+          </ul>
+        </div>
+        <div class="mt-8 md:mt-0">
+          <h4 class="font-medium tracking-wider uppercase text-gray-700">
+            Follow
+          </h4>
+          <ul class="mt-4 space-y-2 text-gray-500">
+            <li><a href="#" class="hover:text-black">Instagram</a></li>
+            <li><a href="#" class="hover:text-black">Twitter</a></li>
+            <li><a href="#" class="hover:text-black">Pinterest</a></li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="mt-16 border-t border-gray-200 pt-8 text-center text-gray-500 text-sm"
+      >
+        © 2025 Seoul Drama Edit. All rights reserved.
+      </div>
+    </footer>
+
+    <!-- 
+      MODAL FIX:
+      - Parent (modalContent) has overflow-hidden.
+      - Image (modal-poster) has:
+        - h-64 on mobile
+        - md:w-1/3 (narrower) and md:h-full on desktop
+        - object-cover to fill the space
+      - Text content div (modal-text-content) gets overflow-y-auto to handle scrolling independently.
+      - Summary (modal-summary) gets mb-8 for spacing.
+    -->
+    <div
+      id="dramaModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden"
+    >
+      <div
+        id="modalContent"
+        class="bg-[#FFFBF5] w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden transform transition-all duration-300 scale-95 opacity-0"
+      >
+        <img
+          id="modal-poster"
+          src=""
+          alt="Drama Poster"
+          class="w-full h-64 md:h-full md:w-1/3 object-cover"
+        />
+
+        <div
+          id="modal-text-content"
+          class="p-8 md:p-12 text-gray-800 flex flex-col justify-between overflow-y-auto"
+        >
+          <div>
+            <span
+              id="modal-genre"
+              class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-[#EAD9C9] text-[#B05B3B]"
+            ></span>
+            <h2
+              id="modal-title"
+              class="font-serif-display text-5xl font-bold mt-4"
+            ></h2>
+            <div
+              id="modal-rating-container"
+              class="flex items-center mt-2 space-x-2"
+            >
+              <!-- Rating injected here -->
+            </div>
+            <p
+              id="modal-summary"
+              class="mt-6 mb-8 text-gray-600 leading-relaxed"
+            ></p>
+          </div>
+          <button
+            class="mt-8 px-8 py-3 text-sm w-full font-medium tracking-wider uppercase bg-[#2D4A48] text-white hover:bg-[#B05B3B] transition-colors duration-300"
+          >
+            Watch Trailer
+          </button>
+        </div>
+      </div>
+      <button id="closeModal" class="absolute top-4 right-4 text-white z-60">
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Global Drama Data Store ---
+        let allDramaData = [];
+
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.querySelector(".cursor-dot");
+        const cursorOutline = document.querySelector(".cursor-outline");
+
+        window.addEventListener("mousemove", (e) => {
+          const posX = e.clientX;
+          const posY = e.clientY;
+          if (cursorDot) {
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+          }
+          if (cursorOutline) {
+            cursorOutline.style.left = `${posX}px`;
+            cursorOutline.style.top = `${posY}px`;
+          }
+        });
+
+        // --- Intersection Observer for Scroll Animations ---
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+              }
+            });
+          },
+          {
+            root: null, // Use the viewport as the root
+            rootMargin: "0px",
+            threshold: 0, // Trigger when 10% is visible
+          }
+        );
+
+        const elementsToAnimate = document.querySelectorAll(
+          ".scroll-animate-fade, .scroll-animate-reveal"
+        );
+        elementsToAnimate.forEach((el) => observer.observe(el));
+
+        // --- Modal Logic ---
+        const modal = document.getElementById("dramaModal");
+        const modalContent = document.getElementById("modalContent");
+        const closeModalBtn = document.getElementById("closeModal");
+
+        // Modal DOM elements
+        const modalPoster = document.getElementById("modal-poster");
+        const modalGenre = document.getElementById("modal-genre");
+        const modalTitle = document.getElementById("modal-title");
+        const modalRatingContainer = document.getElementById(
+          "modal-rating-container"
+        );
+        const modalSummary = document.getElementById("modal-summary");
+
+        /**
+         * Opens the modal with specific drama details.
+         * @param {HTMLElement} card - The drama-card element.
+         */
+        function openModal(card) {
+          if (!card) return;
+
+          const title = card.dataset.title;
+          const genre = card.dataset.genre;
+          const rating = card.dataset.rating;
+          const summary = card.dataset.summary;
+          const poster = card.dataset.poster;
+
+          const displayGenre = genre || "Drama";
+          const displayRating =
+            rating && parseFloat(rating) > 0 ? rating : "N/A";
+          const ratingColor =
+            displayRating !== "N/A" ? "text-[#B05B3B]" : "text-gray-400";
+          const ratingText = displayRating !== "N/A" ? "/ 10" : "";
+
+          // Inject content
+          modalPoster.src = poster;
+          modalPoster.onerror = () => {
+            modalPoster.src =
+              "https://placehold.co/400x600/333/FFF?text=Poster+Not+Found";
+          };
+          modalPoster.alt = title;
+          modalGenre.textContent = displayGenre;
+          modalTitle.textContent = title;
+          modalSummary.textContent = summary || "No summary available.";
+
+          modalRatingContainer.innerHTML = `
+                    <span class="${ratingColor} text-2xl">&#9733;</span>
+                    <span class="text-2xl font-medium ${ratingColor}">${displayRating}</span>
+                    <span class="text-gray-500">${ratingText}</span>
+                `;
+
+          modal.classList.remove("hidden");
+          setTimeout(() => {
+            modalContent.classList.remove("scale-95", "opacity-0");
+            modalContent.classList.add("scale-100", "opacity-100");
+          }, 10);
+        }
+
+        /**
+         * Attaches modal click listeners to all .drama-card elements.
+         */
+        function setupModalTriggers() {
+          const dramaCards = document.querySelectorAll(".drama-card"); // Re-select cards
+          dramaCards.forEach((card) => {
+            // Check if listener already attached
+            if (card.dataset.listenerAttached) return;
+
+            card.addEventListener("click", () => openModal(card));
+            card.dataset.listenerAttached = true; // Mark as attached
+          });
+        }
+
+        const closeModal = () => {
+          modalContent.classList.add("scale-95", "opacity-0");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            // Clear content
+            modalPoster.src = "";
+            modalTitle.textContent = "";
+            modalGenre.textContent = "";
+            modalSummary.textContent = "";
+            modalRatingContainer.innerHTML = "";
+          }, 300);
+        };
+
+        closeModalBtn.addEventListener("click", closeModal);
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeModal();
+          }
+        });
+
+        // --- Pagination Logic for Feed ---
+        const itemsPerPage = 4; // We show fewer items because they are larger
+        let currentPage = 1;
+        const dramaFeed = document.getElementById("drama-feed");
+        const paginatedItems = dramaFeed
+          ? dramaFeed.querySelectorAll(".paginated-item")
+          : [];
+        const totalItems = paginatedItems.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const prevButton = document.getElementById("prev-page");
+        const nextButton = document.getElementById("next-page");
+        const paginationControls = document.getElementById(
+          "pagination-controls"
+        );
+
+        // --- Store All Drama Data for Search ---
+        paginatedItems.forEach((item) => {
+          allDramaData.push({
+            title: item.dataset.title.toLowerCase(),
+            element: item,
+          });
+        });
+
+        function showPage(page) {
+          const startIndex = (page - 1) * itemsPerPage;
+          const endIndex = startIndex + itemsPerPage;
+
+          paginatedItems.forEach((item, index) => {
+            if (index >= startIndex && index < endIndex) {
+              item.style.display = "grid"; // Use 'grid' as it's a grid container
+            } else {
+              item.style.display = "none";
+            }
+          });
+
+          if (prevButton) prevButton.disabled = page === 1;
+          if (nextButton) nextButton.disabled = page === totalPages;
+
+          // Re-attach modal listeners after page change
+          setupModalTriggers();
+        }
+
+        function setupPagination() {
+          if (
+            totalItems > 0 &&
+            prevButton &&
+            nextButton &&
+            paginationControls
+          ) {
+            nextButton.addEventListener("click", () => {
+              if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+                window.scrollTo(0, 0); // Scroll to top
+              }
+            });
+
+            prevButton.addEventListener("click", () => {
+              if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+                window.scrollTo(0, 0); // Scroll to top
+              }
+            });
+
+            showPage(1);
+            paginationControls.style.display = "flex";
+          } else if (paginationControls) {
+            paginationControls.style.display = "none";
+          }
+        }
+
+        // Initial setup for pagination and modal triggers
+        setupPagination();
+
+        // --- Search and Suggestion Logic ---
+        const searchInput = document.getElementById("search-input");
+        const suggestionsBox = document.getElementById("suggestions-box");
+        const searchBtn = document.getElementById("search-btn");
+        const clearBtn = document.getElementById("clear-btn");
+        const dramaFeedContainer = document.getElementById("drama-feed");
+
+        // 1. Suggestion Logic
+        searchInput.addEventListener("input", () => {
+          const query = searchInput.value.toLowerCase();
+          suggestionsBox.innerHTML = "";
+
+          if (query.length === 0) {
+            suggestionsBox.classList.add("hidden");
+            return;
+          }
+
+          const suggestions = allDramaData.filter((drama) =>
+            drama.title.startsWith(query)
+          );
+
+          if (suggestions.length > 0) {
+            suggestions.forEach((drama) => {
+              const item = document.createElement("div");
+              item.classList.add("suggestion-item");
+              item.textContent = drama.element.dataset.title; // Show original title casing
+              item.addEventListener("click", () => {
+                openModal(drama.element);
+                searchInput.value = "";
+                suggestionsBox.classList.add("hidden");
+              });
+              suggestionsBox.appendChild(item);
+            });
+            suggestionsBox.classList.remove("hidden");
+          } else {
+            suggestionsBox.classList.add("hidden");
+          }
+        });
+
+        // 2. Main Search Filter Logic
+        searchBtn.addEventListener("click", () => {
+          const query = searchInput.value.toLowerCase();
+          if (query.length === 0) return;
+
+          // Hide pagination
+          paginationControls.style.display = "none";
+          // Hide suggestions
+          suggestionsBox.classList.add("hidden");
+          // Adjust feed container
+          dramaFeedContainer.classList.remove("space-y-24");
+
+          let resultsFound = false;
+          paginatedItems.forEach((item) => {
+            const title = item.dataset.title.toLowerCase();
+            if (title.includes(query)) {
+              item.style.display = "grid"; // Use 'grid' for consistency
+              item.style.marginBottom = "6rem"; // Add margin for searched items
+              resultsFound = true;
+            } else {
+              item.style.display = "none";
+            }
+          });
+
+          // Show clear button
+          clearBtn.classList.remove("hidden");
+
+          if (!resultsFound) {
+            // You could add a "No results found" message here
+          }
+        });
+
+        // 3. Clear Search Logic
+        clearBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          clearBtn.classList.add("hidden");
+          dramaFeedContainer.classList.add("space-y-24"); // Restore spacing
+          paginatedItems.forEach((item) => {
+            item.style.marginBottom = "0"; // Clear inline margin
+          });
+          // Restore pagination
+          setupPagination();
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!document.getElementById("search-container").contains(e.target)) {
+            suggestionsBox.classList.add("hidden");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

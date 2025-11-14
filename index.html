@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seoul Drama Edit</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter (body) & Cormorant Garamond (headings) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        /* Base Styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FFFBF5; /* Soft, warm off-white */
+            color: #4B4B4B; /* Dark grey text */
+            overflow-x: hidden;
+            cursor: none; /* Hide default cursor */
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #2D4A48; /* Muted teal */
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.2s ease, height 0.2s ease;
+        }
+        .cursor-outline {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #2D4A48;
+            border-radius: 50%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.1s linear;
+        }
+
+        /* Enlarge dot cursor on hoverable elements */
+        body:has(a:hover) .cursor-dot,
+        body:has(button:hover) .cursor-dot,
+        body:has(.drama-card:hover) .cursor-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #B05B3B; /* Terracotta accent */
+        }
+        body:has(a:hover) .cursor-outline,
+        body:has(button:hover) .cursor-outline,
+        body:has(.drama-card:hover) .cursor-outline {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* Custom Typography */
+        .font-serif-display {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFFBF5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D9D9D9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B05B3B;
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Section Title Styling */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 5rem; /* 80px */
+            font-weight: 500;
+            line-height: 1;
+            color: #2D4A48; /* Muted teal */
+        }
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 3rem; /* 48px */
+            }
+        }
+
+        /* Animations */
+        .scroll-animate-fade {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+            transition-delay: var(--delay, 0s);
+        }
+
+        .scroll-animate-reveal {
+            clip-path: inset(0 100% 0 0);
+            transition: clip-path 1s cubic-bezier(0.22, 1, 0.36, 1);
+            transition-delay: var(--delay, 0s);
+        }
+        
+        .is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            clip-path: inset(0 0 0 0);
+        }
+
+        /* Horizontal Scroll Container */
+        .scrolling-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+ cursor: grab; /* <-- Click-to-drag cursor */
+            user-select: none; /* Prevent text selection while dragging */
+        }
+         .scrolling-wrapper.is-grabbing {
+            cursor: grabbing;
+        }
+    
+        .scrolling-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+         /* Pagination button styling */
+        .pagination-btn {
+            padding: 8px 16px;
+            border: 1px solid #D9D9D9;
+            color: #4B4B4B;
+            transition: all 0.3s ease;
+        }
+        .pagination-btn:hover:not(:disabled) {
+            background-color: #2D4A48;
+            color: #FFFBF5;
+            border-color: #2D4A48;
+        }
+        .pagination-btn:disabled {
+            color: #D9D9D9;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- HEADER -->
+    <header id="header" class="fixed top-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-md">
+        <nav class="container mx-auto px-6 md:px-10 py-5 flex justify-between items-center">
+            <a href="#" class="font-serif-display text-3xl text-gray-800 tracking-wide">
+                The Edit
+            </a>
+            <div class="hidden md:flex items-center space-x-10 text-sm font-medium tracking-wider uppercase">
+                <a href="#ongoing" class="text-gray-600 hover:text-black transition-colors">Ongoing</a>
+                <a href="#latest" class="text-gray-600 hover:text-black transition-colors">Latest</a>
+                <a href="#upcoming"G" class="text-gray-600 hover:text-black transition-colors">Upcoming</a>
+            </div>
+            <button class="md:hidden text-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+        <!-- HERO SECTION -->
+        <section class="container mx-auto min-h-screen h-screen grid grid-cols-1 md:grid-cols-5 items-center gap-8 px-6 md:px-10 pt-24 md:pt-0">
+            <!-- Text Content -->
+            <div classid="hero-text" class="md:col-span-2">
+                <h1 class="font-serif-display text-6xl md:text-8xl text-gray-800 leading-tight">
+                    Every<br>Story,
+                    <span class="text-[#B05B3B]">Scene</span>
+                </h1>
+                <p class="mt-6 text-lg text-gray-600 max-w-md scroll-animate-fade" style="--delay: 0.2s;">
+                    Discover the latest, most-watched, and upcoming Korean dramas. Your curated guide to the best of K-storytelling.
+                </p>
+                <a href="#ongoing" class="inline-block mt-8 px-8 py-3 text-sm font-medium tracking-wider uppercase bg-[#2D4A48] text-white hover:bg-[#B05B3B] transition-colors duration-300 scroll-animate-fade" style="--delay: 0.4s;">
+                    Explore Now
+                </a>
+            </div>
+            
+            <!-- Image Content -->
+            <div class="md:col-span-3 h-[60vh] md:h-[70vh] w-full relative">
+                <div id="hero-image-1" class="absolute top-0 left-0 w-2/3 h-2/3 shadow-2xl scroll-animate-reveal">
+                    <img src="https://placehold.co/600x800/A8BFAA/333?text=Aesthetic+Scene+1" 
+                         onerror="this.onerror=null;this.src='https://placehold.co/600x800/A8BFAA/333?text=Image+1';"
+                         class="w-full h-full object-cover" alt="K-drama still 1">
+                </div>
+                <div id="hero-image-2" class="absolute bottom-0 right-0 w-1/2 h-1/2 shadow-xl scroll-animate-reveal" style="--delay: 0.3s;">
+                    <img src="https://placehold.co/400x400/EAD9C9/333?text=Aesthetic+Scene+2" 
+                         onerror="this.onerror=null;this.src='https://placehold.co/400x400/EAD9C9/333?text=Image+2';"
+                         class="w-full h-full object-cover" alt="K-drama still 2">
+                </div>
+            </div>
+        </section>
+
+        <!-- ONGOING SECTION -->
+        <section id="ongoing" class="py-24 overflow-hidden">
+            <div class="container mx-auto px-6 md:px-10">
+                <h2 class="section-title mb-4 scroll-animate-fade">Ongoing.</h2>
+                <p class="text-lg text-gray-600 max-w-lg mb-12 scroll-animate-fade" style="--delay: 0.2s;">
+                    The dramas everyone is talking about right now. Don't miss the latest episodes.
+                </p>
+            </div>
+            
+            <div class="scrolling-wrapper flex gap-6 md:gap-10 pl-6 md:pl-10">
+                <!-- Drama Card 1 -->
+                <div class="drama-card flex-shrink-0 w-72 md:w-80 space-y-3 pb-6 group" style="scroll-snap-align: start;"
+                     data-title="The Manipulated"
+                     data-genre="Thriller, Revenge"
+                     data-rating="9.2"
+                     data-summary="A man's life is turned upside down when he's framed for a crime he didn't commit. He discovers a mastermind pulling the strings and embarks on a dark quest for revenge."
+                     data-poster="https://placehold.co/400x600/3D3D3D/FFF?text=The+Manipulated">
+                    <div class="h-96 w-full overflow-hidden">
+                        <img src="https://placehold.co/400x600/3D3D3D/FFF?text=The+Manipulated" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/400x600/3D3D3D/FFF?text=Poster+Not+Found';"
+                             alt="The Manipulated" class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                    <div class="px-1">
+                        <p class="text-sm font-medium text-[#B05B3B]">Thriller, Revenge</p>
+                        <h3 class="text-2xl font-serif-display text-gray-800">The Manipulated</h3>
+                    </div>
+                </div>
+                
+                <!-- Drama Card 2 -->
+                <div class="drama-card flex-shrink-0 w-72 md:w-80 space-y-3 pb-6 group" style="scroll-snap-align: start;"
+                     data-title="Dear X"
+                     data-genre="Romance, Dark"
+                     data-rating="8.8"
+                     data-summary="A glamorous top actress hides a ruthless, manipulative side beneath her perfect public image. As her world unravels, only her childhood friend knows her true, dark self."
+                     data-poster="https://placehold.co/400x600/BCAAA4/FFF?text=Dear+X">
+                    <div class="h-96 w-full overflow-hidden">
+                        <img src="https://placehold.co/400x600/BCAAA4/FFF?text=Dear+X" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/400x600/BCAAA4/FFF?text=Poster+Not+Found';"
+                             alt="Dear X" class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                    <div class="px-1">
+                        <p class="text-sm font-medium text-[#B05B3B]">Romance, Dark</p>
+                        <h3 class="text-2xl font-serif-display text-gray-800">Dear X</h3>
+                    </div>
+                </div>
+
+                <!-- Drama Card 3 -->
+                <div class="drama-card flex-shrink-0 w-72 md:w-80 space-y-3 pb-6 group" style="scroll-snap-align: start;"
+                     data-title="Taxi Driver 3"
+                     data-genre="Action, Crime"
+                     data-rating="9.5"
+                     data-summary="The Rainbow Taxi company is back in business. Kim Do-gi and the team return to serve vigilante justice to clients who have been wronged by a system that failed them."
+                     data-poster="https://placehold.co/400x600/E8D500/333?text=Taxi+Driver+3">
+                    <div class="h-96 w-full overflow-hidden">
+                        <img src="https://placehold.co/400x600/E8D500/333?text=Taxi+Driver+3" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/400x600/E8D500/333?text=Poster+Not+Found';"
+                             alt="Taxi Driver 3" class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                    <div class="px-1">
+                        <p class="text-sm font-medium text-[#B05B3B]">Action, Crime</p>
+                        <h3 class="text-2xl font-serif-display text-gray-800">Taxi Driver 3</h3>
+                    </div>
+                </div>
+                
+                <!-- Drama Card 4 -->
+                <div class="drama-card flex-shrink-0 w-72 md:w-80 space-y-3 pb-6 group" style="scroll-snap-align: start;"
+                     data-title="Moon River"
+                     data-genre="Fantasy, Romance"
+                     data-rating="8.5"
+                     data-summary="A magical soul swap occurs between a stoic crown prince who has forgotten how to smile and a traveling merchant who has lost her memories. Together, they navigate their intertwined fates."
+                     data-poster="https://placehold.co/400x600/9FA8DA/333?text=Moon+River">
+                    <div class="h-96 w-full overflow-hidden">
+                        <img src="https://placehold.co/400x600/9FA8DA/333?text=Moon+River" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/400x600/9FA8DA/333?text=Poster+Not+Found';"
+                             alt="Moon River" class="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                    <div class="px-1">
+                        <p class="text-sm font-medium text-[#B05B3B]">Fantasy, Romance</p>
+                        <h3 class="text-2xl font-serif-display text-gray-800">Moon River</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LATEST RELEASES (Asymmetric Grid) -->
+        <section id="latest" class="py-24 container mx-auto px-6 md:px-10 overflow-hidden">
+            <h2 class="section-title mb-12 text-right scroll-animate-fade">Latest.</h2>
+            
+            <!-- Item 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-10 gap-8 items-center mb-24">
+                <div class="md:col-span-4 z-10 p-8 bg-[#FFFBF5] shadow-lg">
+                    <p class="text-sm font-medium text-[#B05B3B] scroll-animate-fade" style="--delay: 0.2s;">Romance, Drama</p>
+                    <h3 class="font-serif-display text-4xl text-gray-800 mt-2 scroll-animate-fade" style="--delay: 0.3s;">Last Summer</h3>
+                    <p class="mt-4 text-gray-600 scroll-animate-fade" style="--delay: 0.4s;">
+                        An architect returns from the U.S. and reconnects with his childhood friend, a local civil servant. Their reunion unearths painful secrets about his twin brother and old feelings.
+                    </p>
+                </div>
+                <div class="md:col-span-6 h-96 md:h-[500px] -ml-0 md:-ml-16 scroll-animate-reveal">
+                    <img src="https://placehold.co/800x600/B0BEC5/333?text=Last+Summer" 
+                         onerror="this.onerror=null;this.src='https://placehold.co/800x600/B0BEC5/333?text=Poster+Not+Found';"
+                         class="w-full h-full object-cover" alt="Last Summer">
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-10 gap-8 items-center mb-24">
+                <div class="md:col-span-6 h-96 md:h-[500px] -mr-0 md:-mr-16 order-last md:order-first scroll-animate-reveal">
+                    <img src="https://placehold.co/800x600/D4A5A5/333?text=Dynamite+Kiss" 
+                         onerror="this.onerror=null;this.src='https://placehold.co/800x600/D4A5A5/333?text=Poster+Not+Found';"
+                         class="w-full h-full object-cover" alt="Dynamite Kiss">
+                </div>
+                <div class="md:col-span-4 z-10 p-8 bg-[#FFFBF5] shadow-lg">
+                    <p class="text-sm font-medium text-[#B05B3B] scroll-animate-fade" style="--delay: 0.2s;">Rom-Com, Office</p>
+                    <h3 class="font-serif-display text-4xl text-gray-800 mt-2 scroll-animate-fade" style="--delay: 0.3s;">Dynamite Kiss</h3>
+                    <p class="mt-4 text-gray-600 scroll-animate-fade" style="--delay: 0.4s;">
+                        A woman pretends to be a married mother to secure a job at a top baby products company. Her life gets complicated when her charming team leader starts to fall for her.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- UPCOMING SECTION -->
+       <section id="upcoming" class="py-24 bg-[#F8F3ED]">
+            <div class="container mx-auto px-6 md:px-10">
+                <h2 class="section-title mb-12 scroll-animate-fade text-center">Upcoming.</h2>
+                <div id="upcoming-list" class="max-w-4xl mx-auto space-y-6">
+                    
+                    <!-- Upcoming Item 1 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="Useless Love"
+                         data-genre="Korean Drama - 2025, 51 episodes"
+                         data-rating="0"
+                         data-summary="A hilarious romance between neighbors and cousins ​​that depicts the story of an old bachelor and an old maid who have an outdated notion that men and women must get married after sleeping together..."
+                         data-poster="https://i.mydramalist.com/O8eprk_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">Useless Love</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Rom-Com, Family</span>
+                    </div>
+                    
+                    <!-- Upcoming Item 2 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="A Graceful Liar"
+                         data-genre="Korean Drama - 2025, 100 episodes"
+                         data-rating="0"
+                         data-summary="To marry the heir of the Geonhyang Group, Cha Jeong Won enters a wealthy family under a false identity, borrowing her friend's name. However, the woman who appears before her as her mother-in-law, Han Hye Ra, is none..."
+                         data-poster="https://i.mydramalist.com/VXmBWL_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">A Graceful Liar</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Drama, Melodrama</span>
+                    </div>
+                    
+                    <!-- Upcoming Item 3 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="Me, Myself, and I"
+                         data-genre="Korean Drama - 2025, 50 episodes"
+                         data-rating="0"
+                         data-summary="A story about an ordinary high school girl who finds true love after receiving a phone call from herself 10 years in the future."
+                         data-poster="https://i.mydramalist.com/73j73N_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">Me, Myself, and I</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Fantasy, Romance</span>
+                    </div>
+                    
+                    <!-- Upcoming Item 4 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="I'll Repay Infidelity with Infidelity"
+                         data-genre="Korean Drama - 2025, 10 episodes"
+                         data-rating="0"
+                         data-summary="A 19+ romantic office drama about a protagonist who was betrayed by her husband and best friend and starts a dangerous contract affair with her best friend's husband for revenge."
+                         data-poster="https://i.mydramalist.com/oQROQL_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">I'll Repay Infidelity with Infidelity</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Revenge, Romance</span>
+                    </div>
+
+                    <!-- Upcoming Item 5 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="Half of Me"
+                         data-genre="Korean Drama - 2025, 51 episodes"
+                         data-rating="0"
+                         data-summary="From 7 AM to 7 PM, I have to live in someone else’s body for 12 hours…?! Due to a car accident, Taekin, a teenager in high school, and Heechan have switched souls. Due to this, Heechan’s vegetable business, to..."
+                         data-poster="https://i.mydramalist.com/ABVJXg_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">Half of Me</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Fantasy, Comedy</span>
+                    </div>
+
+                    <!-- Upcoming Item 6 -->
+                    <div class="upcoming-item drama-card border-b border-gray-300 pb-4 flex justify-between items-end scroll-animate-fade"
+                         data-title="Our Golden Days"
+                         data-genre="Korean Drama - 2025, 50 episodes"
+                         data-rating="7.6"
+                         data-summary="Lee Ji Hyeok is a competent person, who is recognized both in work and love. He is proactive and cold-hearted, but he also has a sense of humor. Lee Ji Hyeok looks glamorous, but, after experiencing the lowest point..."
+                         data-poster="https://i.mydramalist.com/mOYNB1_4s.jpg?v=1">
+                        <div>
+                            <span class="text-sm text-[#B05B3B]">2025</span>
+                            <h3 class="font-serif-display text-3xl text-gray-800 mt-1">Our Golden Days</h3>
+                        </div>
+                        <span class="text-gray-500 hidden md:block">Drama, Family</span>
+                    </div>
+
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" class="max-w-4xl mx-auto flex justify-center space-x-4 mt-12 scroll-animate-fade">
+                    <button id="prev-page" class="pagination-btn">Previous</button>
+                    <button id="next-page" class="pagination-btn">Next</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-20 container mx-auto px-6 md:px-10">
+        <div class="flex flex-col md:flex-row justify-between items-start">
+            <div>
+                <a href="#" class="font-serif-display text-3xl text-gray-800 tracking-wide">
+                    The Edit
+                </a>
+                <p class="mt-2 text-gray-500">Curated K-Drama insights.</p>
+            </div>
+            <div class="mt-8 md:mt-0">
+                <h4 class="font-medium tracking-wider uppercase text-gray-700">Explore</h4>
+                <ul class="mt-4 space-y-2 text-gray-500">
+                    <li><a href="#ongoing" class="hover:text-black">Ongoing</a></li>
+                    <li><a href="#latest" class="hover:text-black">Latest</a></li>
+                    <li><a href="#upcoming" class="hover:text-black">Upcoming</a></li>
+                </ul>
+            </div>
+            <div class="mt-8 md:mt-0">
+                <h4 class="font-medium tracking-wider uppercase text-gray-700">Follow</h4>
+                <ul class="mt-4 space-y-2 text-gray-500">
+                    <li><a href="#" class="hover:text-black">Instagram</a></li>
+                    <li><a href="#" class="hover:text-black">Twitter</a></li>
+                    <li><a href="#" class="hover:text-black">Pinterest</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="mt-16 border-t border-gray-200 pt-8 text-center text-gray-500 text-sm">
+            © 2025 Seoul Drama Edit. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- DRAMA DETAIL MODAL -->
+    <div id="dramaModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden">
+        <div id="modalContent" class="bg-[#FFFBF5] w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-lg shadow-2xl flex flex-col md:flex-row transform transition-all duration-300 scale-95 opacity-0">
+            <!-- Content injected by JS -->
+        </div>
+        <button id="closeModal" class="absolute top-4 right-4 text-white z-60">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- Custom Cursor Logic ---
+            const cursorDot = document.querySelector('.cursor-dot');
+            const cursorOutline = document.querySelector('.cursor-outline');
+
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
+
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
+
+                cursorOutline.style.left = `${posX}px`;
+                cursorOutline.style.top = `${posY}px`;
+            });
+
+            // --- Intersection Observer for Scroll Animations ---
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        // Optional: unobserve after animation
+                        // observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                root: null, // Use the viewport as the root
+                rootMargin: '0px',
+                threshold: 0 // Trigger when 10% is visible
+            });
+
+            // Observe all elements with .scroll-animate-*
+            const elementsToAnimate = document.querySelectorAll('.scroll-animate-fade, .scroll-animate-reveal');
+            elementsToAnimate.forEach(el => observer.observe(el));
+
+            // --- Hero Parallax ---
+            const heroText = document.getElementById('hero-text');
+            const heroImg1 = document.getElementById('hero-image-1');
+            const heroImg2 = document.getElementById('hero-image-2');
+            window.addEventListener('scroll', () => {
+                const scroll = window.scrollY;
+                if (heroText) {
+                    heroText.style.transform = `translateY(${scroll * 0.2}px)`;
+                }
+                if (heroImg1) {
+                    heroImg1.style.transform = `translateY(${scroll * 0.1}px)`;
+                }
+                if (heroImg2) {
+                    heroImg2.style.transform = `translateY(${scroll * 0.15}px)`;
+                }
+            });
+            // --- Click-to-Drag Scrolling for Ongoing Section ---
+            const scroller = document.getElementById('ongoing-scroller');
+            if (scroller) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                scroller.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    scroller.classList.add('is-grabbing');
+                    startX = e.pageX - scroller.offsetLeft;
+                    scrollLeft = scroller.scrollLeft;
+                });
+                scroller.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    scroller.classList.remove('is-grabbing');
+                });
+                scroller.addEventListener('mouseup', () => {
+                    isDown = false;
+                    scroller.classList.remove('is-grabbing');
+                });
+                scroller.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - scroller.offsetLeft;
+                    const walk = (x - startX) * 2; // '2' is the scroll speed multiplier
+                    scroller.scrollLeft = scrollLeft - walk;
+                });
+            }
+            // --- Modal Logic ---
+            const modal = document.getElementById('dramaModal');
+            const modalContent = document.getElementById('modalContent');
+            const closeModalBtn = document.getElementById('closeModal');
+            const dramaCards = document.querySelectorAll('.drama-card');
+
+            dramaCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const title = card.dataset.title;
+                    const genre = card.dataset.genre;
+                    const rating = card.dataset.rating;
+                    const summary = card.dataset.summary;
+                    const poster = card.dataset.poster;
+
+                    // Inject content into modal
+                    modalContent.innerHTML = `
+                        <img src="${poster}" onerror="this.onerror=null;this.src='https.placehold.co/400x600/333/FFF?text=Poster+Not+Found';" alt="${title}" class="w-full md:w-2/5 h-auto object-cover rounded-l-lg">
+                        <div class="p-8 md:p-12 text-gray-800 flex flex-col justify-between">
+                            <div>
+                                <span class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-[#EAD9C9] text-[#B05B3B]">${genre}</span>
+                                <h2 class="font-serif-display text-5xl font-bold mt-4">${title}</h2>
+                                <div class="flex items-center mt-2 space-x-2">
+                                    <span class="text-[#B05B3B] text-2xl">&#9733;</span> <!-- Star -->
+                                    <span class="text-2xl font-medium">${rating}</span>
+                                    <span class="text-gray-500">/ 10</span>
+                                </div>
+                                <p class="mt-6 text-gray-600 leading-relaxed">${summary}</p>
+                            </div>
+                            <button class="mt-8 px-8 py-3 text-sm w-full font-medium tracking-wider uppercase bg-[#2D4A48] text-white hover:bg-[#B05B3B] transition-colors duration-300">
+                                Watch Trailer
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Show modal
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        modalContent.classList.remove('scale-95', 'opacity-0');
+                        modalContent.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                });
+            });
+
+            // Close modal function
+            const closeModal = () => {
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modalContent.innerHTML = '';
+                }, 300);
+            };
+
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            // --- Upcoming Section Pagination Logic ---
+            const itemsPerPage = 4;
+            let currentPage = 1;
+            const upcomingItems = document.querySelectorAll('#upcoming-list .upcoming-item');
+            const totalItems = upcomingItems.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const prevButton = document.getElementById('prev-page');
+            const nextButton = document.getElementById('next-page');
+
+            function showPage(page) {
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+
+                upcomingItems.forEach((item, index) => {
+                    if (index >= startIndex && index < endIndex) {
+                        item.style.display = 'flex'; // Use 'flex' as it's a flex container
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Update button states
+                if (page === 1) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+
+                if (page === totalPages) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
+            }
+
+            // Next button click
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    showPage(currentPage);
+                }
+            });
+
+            // Previous button click
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    showPage(currentPage);
+                }
+            });
+
+            // Initial page load
+            if(upcomingItems.length > 0) {
+                 showPage(1);
+            } else {
+                // Hide controls if no items
+                document.getElementById('pagination-controls').style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
